@@ -1,27 +1,33 @@
 package bot;
 
-import java.util.List;
+import java.util.Iterator;
+
+import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+
 
 import javax.swing.JButton;
-import java.awt.BorderLayout;
 import java.awt.event.ActionListener;
-import java.util.concurrent.TimeUnit;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.time.Duration;
+import java.time.Instant;
 import java.awt.event.ActionEvent;
 import java.awt.Color;
 import java.awt.Font;
@@ -29,7 +35,7 @@ import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.JComboBox;
 import java.util.prefs.*;
-import java.awt.Toolkit;
+
 public class botApp {
 	
 	static String name;
@@ -43,8 +49,11 @@ public class botApp {
 	static int state = 58;
 	static int cardMonth;
 	static int cardYear;
-	static String prodSKU;
+	static String keyWord;
 	static int cSIZE;
+	static String color;
+	static String catagory;
+	
 	
 	public static WebDriver driver;
 
@@ -53,13 +62,16 @@ public class botApp {
 	private JTextField txtStreet;
 	private JTextField txtZipCode;
 	private JTextField txtPhoneNumber;
-	private JTextField txtItemId;
+	private JTextField txtKeyWord;
 	private JTextField txtCard;
 	private JTextField TXTcvv;
 	private JTextField txtCity;
 	private JTextField txtEmail;
+	private JTextField txtColor;
 	
 	JComboBox<String> monthDrop;
+	private JTextField txtCatagory;
+	
 
 	/**
 	 * Launch the application.
@@ -89,11 +101,12 @@ public class botApp {
 	 */
 	private void initialize() {
 		frmPremeBot = new JFrame();
+		frmPremeBot.getContentPane().setForeground(new Color(0, 0, 0));
 		frmPremeBot.setResizable(false);
 		frmPremeBot.setTitle("Checkout Bot");
-		frmPremeBot.setForeground(new Color(102, 204, 0));
+		frmPremeBot.setForeground(new Color(0, 0, 0));
 		frmPremeBot.setBackground(new Color(0, 0, 0));
-		frmPremeBot.getContentPane().setBackground(new Color(51, 51, 51));
+		frmPremeBot.getContentPane().setBackground(new Color(102, 102, 102));
 		frmPremeBot.setBounds(100, 100, 706, 469);
 		frmPremeBot.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frmPremeBot.getContentPane().setLayout(null);
@@ -110,10 +123,12 @@ public class botApp {
 		final String PREF_CITY = "city";
 		final String PREF_CARD = "card";
 		final String PREF_CVV = "cvv";
-		final String PREF_ID = "itemID";
+		final String PREF_KEYWORD = "itemKeyWord";
 		final String PREF_MONTH = "month";
 		final String PREF_YEAR = "year";
 		final String PREF_SIZE = "size";
+		final String PREF_COLOR = "color";
+		final String PREF_CATAGORY = "catagory";
 		
 		// Get the value of the preference;
 		String namePropertyValue = prefs.get(PREF_NAME, "no val"); // "a string"
@@ -124,10 +139,12 @@ public class botApp {
 		String cityPropertyValue = prefs.get(PREF_CITY, "no val");
 		String cardPropertyValue = prefs.get(PREF_CARD, "no val");
 		String cvvPropertyValue = prefs.get(PREF_CVV, "no val");
-		String itemIDPropertyValue = prefs.get(PREF_ID, "no val");
+		String itemKeyWordPropertyValue = prefs.get(PREF_KEYWORD, "no val");
 		int monthPropertyValue = prefs.getInt(PREF_MONTH, 0);
 		int yearPropertyValue = prefs.getInt(PREF_YEAR, 0);
 		int sizePropertyValue = prefs.getInt(PREF_SIZE, 0);
+		String colorPropertyValue = prefs.get(PREF_COLOR, "no val");
+		String catagoryPropertyValue = prefs.get(PREF_CATAGORY, "no val");
 		
 		//month drop down menu
 		String[] months = {"01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"};
@@ -136,13 +153,7 @@ public class botApp {
 		monthDrop.setFont(new Font("Calibri Light", Font.PLAIN, 18));
 		monthDrop.setForeground(new Color(255, 255, 255));
 		monthDrop.setBackground(new Color(153, 153, 153));
-		monthDrop.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				//set users month to the selected index + 1
-				cardMonth = monthDrop.getSelectedIndex() + 1;
-			}
-		});
-		monthDrop.setBounds(450, 74, 74, 32);
+		monthDrop.setBounds(440, 74, 74, 32);
 		frmPremeBot.getContentPane().add(monthDrop);
 		
 		//years drop down menu
@@ -152,34 +163,24 @@ public class botApp {
 		yearDrop.setForeground(new Color(255, 255, 255));
 		yearDrop.setBackground(new Color(153, 153, 153));
 		yearDrop.setSelectedIndex(yearPropertyValue - 1);
-		yearDrop.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				cardYear = yearDrop.getSelectedIndex() + 1;
-			}
-		});
-		yearDrop.setBounds(450, 127, 74, 32);
+		yearDrop.setBounds(545, 74, 74, 32);
 		frmPremeBot.getContentPane().add(yearDrop);
 		
 		//sizes drop down menu
-		String[] sizes = {"small", "medium", "large", "X large"};
+		String[] sizes = {"one size", "small", "medium", "large", "X large"};
 		JComboBox sizeDrop = new JComboBox(sizes);
 		sizeDrop.setFont(new Font("Calibri Light", Font.PLAIN, 18));
 		sizeDrop.setForeground(new Color(255, 255, 255));
 		sizeDrop.setBackground(new Color(153, 153, 153));
 		sizeDrop.setSelectedIndex(sizePropertyValue);
-		sizeDrop.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				cSIZE = sizeDrop.getSelectedIndex();
-			}
-		});
-		sizeDrop.setBounds(440, 283, 84, 32);
+		sizeDrop.setBounds(440, 340, 113, 32);
 		frmPremeBot.getContentPane().add(sizeDrop);
 		
 		//run bot button
 		JButton btnRun = new JButton("RUN BOT");
-		btnRun.setFont(new Font("SansSerif", Font.PLAIN, 21));
-		btnRun.setBackground(new Color(153, 204, 0));
-		btnRun.setForeground(new Color(255, 255, 255));
+		btnRun.setFont(new Font("Consolas", Font.PLAIN, 24));
+		btnRun.setBackground(new Color(153, 255, 102));
+		btnRun.setForeground(new Color(0, 0, 0));
 		btnRun.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				//read in all the text boxes and set variables to them
@@ -200,25 +201,29 @@ public class botApp {
 				prefs.put(PREF_CARD, card);
 				cvv = TXTcvv.getText();
 				prefs.put(PREF_CVV, cvv);
-				prodSKU = txtItemId.getText();
-				prefs.put(PREF_ID, prodSKU);
+				keyWord = txtKeyWord.getText();
+				prefs.put(PREF_KEYWORD, keyWord);
 				cardMonth = monthDrop.getSelectedIndex() + 1;
 				prefs.putInt(PREF_MONTH,cardMonth);
 				cardYear = yearDrop.getSelectedIndex() + 1;
 				prefs.putInt(PREF_YEAR,cardYear);
 				cSIZE = sizeDrop.getSelectedIndex();
 				prefs.putInt(PREF_SIZE,cSIZE);
+				color = txtColor.getText();
+				prefs.put(PREF_COLOR, color);
+				catagory = txtCatagory.getText();
+				prefs.put(PREF_CATAGORY, catagory);
 				
-			    try {
+				try {
 					runBot();
-				} catch (InterruptedException e) {
+				} catch (InterruptedException | IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				
 			}
 		});
-		btnRun.setBounds(453, 342, 185, 35);
+		btnRun.setBounds(43, 349, 248, 48);
 		frmPremeBot.getContentPane().add(btnRun);
 		
 		//name text box
@@ -258,11 +263,11 @@ public class botApp {
 		frmPremeBot.getContentPane().add(txtCity);
 		txtCity.setColumns(10);
 		//item id txt box
-		txtItemId = new JTextField(itemIDPropertyValue);
-		txtItemId.setFont(new Font("Calibri Light", Font.PLAIN, 18));
-		txtItemId.setBounds(440, 233, 186, 32);
-		frmPremeBot.getContentPane().add(txtItemId);
-		txtItemId.setColumns(10);
+		txtKeyWord = new JTextField(itemKeyWordPropertyValue);
+		txtKeyWord.setFont(new Font("Calibri Light", Font.PLAIN, 18));
+		txtKeyWord.setBounds(440, 180, 186, 32);
+		frmPremeBot.getContentPane().add(txtKeyWord);
+		txtKeyWord.setColumns(10);
 		//card text box
 		txtCard = new JTextField(cardPropertyValue);
 		txtCard.setFont(new Font("Calibri Light", Font.PLAIN, 18));
@@ -272,9 +277,21 @@ public class botApp {
 		//cvv text box
 		TXTcvv = new JTextField(cvvPropertyValue);
 		TXTcvv.setFont(new Font("Calibri Light", Font.PLAIN, 18));
-		TXTcvv.setBounds(440, 180, 186, 32);
+		TXTcvv.setBounds(440, 127, 186, 32);
 		frmPremeBot.getContentPane().add(TXTcvv);
 		TXTcvv.setColumns(10);
+		
+		txtColor = new JTextField(colorPropertyValue);
+		txtColor.setFont(new Font("Calibri Light", Font.PLAIN, 18));
+		txtColor.setBounds(440, 233, 186, 32);
+		frmPremeBot.getContentPane().add(txtColor);
+		txtColor.setColumns(10);
+		
+		txtCatagory = new JTextField(catagoryPropertyValue);
+		txtCatagory.setFont(new Font("Calibri Light", Font.PLAIN, 18));
+		txtCatagory.setBounds(440, 286, 186, 32);
+		frmPremeBot.getContentPane().add(txtCatagory);
+		txtCatagory.setColumns(10);
 		
 		JLabel lblName = new JLabel("Name");
 		lblName.setFont(new Font("Corbel", Font.PLAIN, 18));
@@ -310,32 +327,26 @@ public class botApp {
 		JLabel lblCvv = new JLabel("CVV");
 		lblCvv.setFont(new Font("Calibri Light", Font.PLAIN, 18));
 		lblCvv.setForeground(new Color(255, 255, 255));
-		lblCvv.setBounds(357, 186, 39, 26);
+		lblCvv.setBounds(357, 129, 39, 26);
 		frmPremeBot.getContentPane().add(lblCvv);
 		
-		JLabel lblItemId = new JLabel("ITEM ID");
-		lblItemId.setFont(new Font("Calibri Light", Font.PLAIN, 18));
-		lblItemId.setForeground(new Color(255, 255, 255));
-		lblItemId.setBounds(357, 239, 92, 26);
-		frmPremeBot.getContentPane().add(lblItemId);
+		JLabel lblKeyWord = new JLabel("Key Word");
+		lblKeyWord.setFont(new Font("Calibri Light", Font.PLAIN, 18));
+		lblKeyWord.setForeground(new Color(255, 255, 255));
+		lblKeyWord.setBounds(357, 182, 92, 26);
+		frmPremeBot.getContentPane().add(lblKeyWord);
 		
 		JLabel lblCity = new JLabel("City");
 		lblCity.setFont(new Font("Calibri Light", Font.PLAIN, 18));
 		lblCity.setForeground(new Color(255, 255, 255));
-		lblCity.setBounds(21, 299, 92, 26);
+		lblCity.setBounds(21, 292, 92, 26);
 		frmPremeBot.getContentPane().add(lblCity);
 		
-		JLabel lblExpMonth = new JLabel("exp month");
+		JLabel lblExpMonth = new JLabel("exp");
 		lblExpMonth.setFont(new Font("Calibri Light", Font.PLAIN, 18));
 		lblExpMonth.setForeground(new Color(255, 255, 255));
 		lblExpMonth.setBounds(357, 80, 100, 26);
 		frmPremeBot.getContentPane().add(lblExpMonth);
-		
-		JLabel lblExpYear = new JLabel("exp year");
-		lblExpYear.setFont(new Font("Calibri Light", Font.PLAIN, 18));
-		lblExpYear.setForeground(new Color(255, 255, 255));
-		lblExpYear.setBounds(357, 133, 84, 26);
-		frmPremeBot.getContentPane().add(lblExpYear);
 		
 		
 		JLabel lblEmail = new JLabel("Email");
@@ -347,43 +358,78 @@ public class botApp {
 		JLabel lblSize = new JLabel("Size");
 		lblSize.setFont(new Font("Calibri Light", Font.PLAIN, 18));
 		lblSize.setForeground(new Color(255, 255, 255));
-		lblSize.setBounds(357, 289, 39, 26);
+		lblSize.setBounds(357, 343, 39, 26);
 		frmPremeBot.getContentPane().add(lblSize);
+		
+		JLabel lblColor = new JLabel("Color");
+		lblColor.setForeground(new Color(255, 255, 255));
+		lblColor.setFont(new Font("Calibri Light", Font.PLAIN, 18));
+		lblColor.setBounds(357, 235, 92, 26);
+		frmPremeBot.getContentPane().add(lblColor);
+		
+		JLabel lblCatagory = new JLabel("Catagory");
+		lblCatagory.setForeground(new Color(255, 255, 255));
+		lblCatagory.setFont(new Font("Calibri Light", Font.PLAIN, 18));
+		lblCatagory.setBounds(357, 289, 92, 26);
+		frmPremeBot.getContentPane().add(lblCatagory);
+		
 	}
 	
-	public void runBot() throws InterruptedException {
+	public void runBot() throws InterruptedException, MalformedURLException, IOException {
 		//open store url
 		initWebDriver("https://www.supremenewyork.com/shop/all");
-		//find the product to click on
-		driver.findElement(By.xpath("//img[contains(@src,'" + prodSKU + "')]")).click();
 		
-		WebDriverWait wait = new WebDriverWait(driver, 40);
+		Instant start = Instant.now();
+		int id = 0;
+		//keep looping until a product id is found
+		while(id == 0) {
+			//find the product and return its id, if no product is found, return 0
+			id = findProduct(keyWord);
+			System.out.println("Looking for product");
+		}
+		
+		System.out.println("Product found");
+		
+		//get the varient by passing the link to the json file to that product
+		String prodID = "VAR NOT FOUND";
+		while(prodID.equals("VAR NOT FOUND")) {
+			prodID = getVarient("https://www.supremenewyork.com" + "/shop/" + id + ".json");
+		}
+		System.out.println("Product VAR found");
+		//find the product to click on
+		driver.findElement(By.xpath("//img[contains(@src,'" + prodID + "')]")).click();
+		//assets.supremenewyork.com/181074/sw/zAmPJjyeNH8.jpg
+		WebDriverWait wait = new WebDriverWait(driver, 20);
 		//wait until the add to cart button is click able
 	    wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id=\"ard-rrmove-brttons\"]/input")));
 	    //boolean for if there is a size drop down
 		Boolean dropdownPresent = driver.findElement(By.name("s")).isDisplayed();
 		//check if size is available, if so set the size 
-		System.out.println(cSIZE);
 	    if(dropdownPresent) {
-			if(cSIZE == 0) {
-				System.out.println(cSIZE);
-				driver.findElement(By.xpath("//*[@id=\"s\"]/option[1]")).click();
-			} else if(cSIZE == 1) {
-				driver.findElement(By.xpath("//*[@id=\"s\"]/option[2]")).click();
+	    	Select sizeDropDown = new Select(driver.findElement(By.xpath("//*[@id=\"s\"]")));
+	    	if(cSIZE == 0) {
+	    		//do nothing
+	    	} else if(cSIZE == 1) {
+	    		sizeDropDown.selectByVisibleText("Small");
 			} else if(cSIZE == 2) {
-				driver.findElement(By.xpath("//*[@id=\"s\"]/option[3]")).click();
+				sizeDropDown.selectByVisibleText("Medium");
 			} else if(cSIZE == 3) {
-				driver.findElement(By.xpath("//*[@id=\"s\"]/option[4]")).click();
+				sizeDropDown.selectByVisibleText("Large");
+			} else if(cSIZE == 4) {
+				sizeDropDown.selectByVisibleText("XLarge");
 			}
-			
 	     }
+	    System.out.println("size selected");
 	  
-		//wait until page is loaded
 		driver.findElement(By.xpath("//*[@id=\"ard-rrmove-brttons\"]/input")).click();
+		System.out.println("Item added to cart");
+		
 		//wait until the checkout button is click able
 		wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//*[@id=\"cart\"]/a[2]")));
 		//find each text field with its xpath and send the keys to them
 		driver.findElement(By.xpath("//*[@id=\"cart\"]/a[2]")).click();
+		System.out.println("Item at checkout screen");
+		
 		driver.findElement(By.xpath("//*[@id=\"order_billing_name\"]")).sendKeys(name);
 		driver.findElement(By.xpath("//*[@id=\"order_email\"]")).sendKeys(email);
 		driver.findElement(By.xpath("//*[@id=\"order_tel\"]")).sendKeys(phone);
@@ -392,13 +438,18 @@ public class botApp {
 		driver.findElement(By.xpath("//*[@id=\"order_billing_city\"]")).sendKeys(city);
 		driver.findElement(By.xpath("//*[@id=\"order_billing_state\"]/option[" + state + "]")).click();
 		//needed wait time to avoid captcha
-		TimeUnit.SECONDS.sleep(2);
+		//TimeUnit.SECONDS.sleep(2);
 		driver.findElement(By.xpath("//*[@id=\"orcer\"]")).sendKeys(cvv);
 		driver.findElement(By.xpath("//*[@id=\"rnsnckrn\"]")).sendKeys(card);
 		driver.findElement(By.xpath("//*[@id=\"credit_card_month\"]/option[" + cardMonth + "]")).click();
 		driver.findElement(By.xpath("//*[@id=\"credit_card_year\"]/option[" + cardYear + "]")).click();
 		driver.findElement(By.xpath("//*[@id=\"cart-cc\"]/fieldset/p[2]/label/div/ins")).click();
 		driver.findElement(By.xpath("//*[@id=\"pay\"]/input")).click();
+		
+		System.out.println("Checkout Pressed");
+		Instant end = Instant.now();
+		Duration time = Duration.between(start, end);
+		System.out.println("Checkout time: " + time.getSeconds());
 	}
 	
 	public static void initWebDriver(String URL) throws InterruptedException {
@@ -408,11 +459,69 @@ public class botApp {
 		options.addArguments("disable-infobars");
 		options.addArguments("--start-maximized");
 		//options.addArguments("user-data-dir=/Users/jackb/AppData/Local/Google/Chrome/User Data");
-		
 		driver = new ChromeDriver(options);
 		// Initialize browser
 		// Open supreme homescreen
 		driver.get(URL);
+	}
+	
+	public int findProduct(String keyWord) throws MalformedURLException, IOException {
+		//convert url into a string
+		@SuppressWarnings("resource")
+		String s = new Scanner(new URL("https://www.supremenewyork.com/mobile_stock.json").openStream(), "UTF-8").useDelimiter("\\A").next();
+		//create a json object with that string 
+		JSONObject obj = new JSONObject(s);
+	    JSONObject categories = obj.getJSONObject("products_and_categories");
+		Iterator<String> keys = categories.keys();
+		while(keys.hasNext()) {
+			String key = keys.next();
+			if (categories.get(key) instanceof JSONArray){
+				JSONArray arr = (JSONArray) categories.get(key);
+				for(int i = 0; i < arr.length(); i++) {
+					JSONObject object = arr.getJSONObject(i);
+					if(object.getString("name").contains(keyWord) && object.getString("category_name").equals(catagory)) {
+						return object.getInt("id");
+					}
+				}
+			}
+		  } 
+		  return 0;
+	}
+	
+	public String getVarient(String prodURL) throws MalformedURLException, IOException {
+		String size = "one size";
+    	if(cSIZE == 1) {
+    		size ="Small";
+		} else if(cSIZE == 2) {
+			size = "Medium";
+		} else if(cSIZE == 3) {
+			size = "Large";
+		} else if(cSIZE == 4) {
+			size = "XLarge";
+		}
+		//convert url into a string
+		@SuppressWarnings("resource")
+		String productURL = new Scanner(new URL(prodURL).openStream(), "UTF-8").useDelimiter("\\A").next();
+		//create a json object with that string 
+		JSONObject prod = new JSONObject(productURL);
+		//Create a jso array of styles
+		JSONArray arr = prod.getJSONArray("styles");
+		//loop through each style
+		for(int i = 0; i < arr.length(); i++) {
+			JSONObject jsonObject = arr.getJSONObject(i);
+		    JSONArray sizeArr = jsonObject.getJSONArray("sizes");
+		    //loop through each style
+			for (int j = 0; j < sizeArr.length(); j++) {
+				JSONObject jsonObjectSize = sizeArr.getJSONObject(j);
+				if(jsonObject.getString("name").contains(color) && (jsonObjectSize.getString("name").contentEquals(size) || size.contentEquals("one size"))){
+					if(jsonObjectSize.getInt("stock_level") > 0) {
+						String URL = jsonObject.getString("image_url");
+						return URL.substring(28, 34);
+					}
+				}
+			 }
+	     }
+		 return "VAR NOT FOUND";
 	}
 	
 	public static void endSession() {
