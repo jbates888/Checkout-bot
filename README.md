@@ -1,8 +1,6 @@
 # Checkout Bot
 ![botimg](https://user-images.githubusercontent.com/41972596/89941566-d15e5900-dbe0-11ea-80ce-7e3c99bd8256.jpg)
-![GitHub repo size](https://img.shields.io/github/repo-size/jbates888/README-template.md)
-![GitHub contributors](https://img.shields.io/github/contributors/jbates888/README-template.md)
-![GitHub forks](https://img.shields.io/github/forks/jbates888/README-template.md?style=social)
+
 
 Supreme checkout bot to help you buy products fast!
 
