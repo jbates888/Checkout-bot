@@ -1,6 +1,8 @@
-# Project name
+# Checkout Bot
 
-<!--- These are examples. See https://shields.io for others or to customize this set of shields. You might want to include dependencies, project status and licence info here --->
+![botimg](https://user-images.githubusercontent.com/41972596/89941566-d15e5900-dbe0-11ea-80ce-7e3c99bd8256.jpg)
+
+
 ![GitHub repo size](https://img.shields.io/github/repo-size/jbates888/README-template.md)
 ![GitHub contributors](https://img.shields.io/github/contributors/jbates888/README-template.md)
 ![GitHub forks](https://img.shields.io/github/forks/jbates888/README-template.md?style=social)
